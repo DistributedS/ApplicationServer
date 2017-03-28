@@ -97,7 +97,7 @@ public class Satellite extends Thread {
         // ... Pending, need eample properties file
         String classHost = classConfig.getProperty("HOST");
         String classPortString = classConfig.getProperty("PORT");
-        String docRoot = classConfig.getProperty("PORT");
+
         initOperationsLoader(host, portString);
 
 
@@ -125,8 +125,8 @@ public class Satellite extends Thread {
             System.out.println("Waiting for connections on Port #" + port);
             socket  = serverSocket.accept();
             System.out.println("A connection to a client is established!");
-            satellitethread = new SatelliteThread();
-            SatelliteThread(socket, this.Satellite);
+            //add Try-catch
+            (new SatelliteThread(socket, this)).start();
           }
 
         }catch(IOException ioe){
@@ -165,7 +165,7 @@ public class Satellite extends Thread {
 
             // reading message
             // ...
-            message = readFromServer.readObject();
+            message = (Message) readFromServer.readObject();
 
 
 
@@ -173,14 +173,16 @@ public class Satellite extends Thread {
             // processing message
             switch (message.getType()) {
                 case JOB_REQUEST:
-                    Object classWithParameters = message.getContent();
+                    Job job = (Job) message.getContent();
+                    //job.getToolName
                     //Make Object that dictates parameters and class name inside content object
                     //HELP
                     //get string toolName
                     //get parameters
-                    //getToolObject(toolName)
+                    Tool tool = getToolObject(toolName);
+                    Object result = tool.go(toolParameters);
                     //call toolName with parameters
-                    //send results back (writeToServer)
+                    //send results back (writeToServer) result.writeToServer
 
                     break;
 
@@ -221,7 +223,7 @@ public class Satellite extends Thread {
         Satellite satellite = new Satellite(args[0], args[1], args[2]);
         satellite.run();
 
-        //(new Satellite("Satellite.Earth.properties", "WebServer.properties")).start();
+        //(new Satellite("Satellite.Earth.properties", "WebServer.properties", "Server.properties")).start();
         //(new Satellite("Satellite.Venus.properties", "WebServer.properties")).start();
         //(new Satellite("Satellite.Mercury.properties", "WebServer.properties")).start();
     }
