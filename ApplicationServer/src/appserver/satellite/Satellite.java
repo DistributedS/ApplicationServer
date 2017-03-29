@@ -1,4 +1,4 @@
-=package appserver.satellite;
+package appserver.satellite;
 
 import appserver.job.Job;
 import appserver.comm.ConnectivityInfo;
@@ -33,26 +33,25 @@ public class Satellite extends Thread {
     private ConnectivityInfo serverInfo = new ConnectivityInfo();
     private HTTPClassLoader classLoader = null;
     private Hashtable toolsCache = null;
+    private PropertyHandler satelliteConfig = null;
+    private PropertyHandler classConfig = null;
+    private PropertyHandler serverConfig = null;
+    final private String serverHost;
+    final private int serverPort;
 
     public Satellite(String satellitePropertiesFile, String classLoaderPropertiesFile, String serverPropertiesFile) {
 
         // read the configuration information from the file name passed in
         // ---------------------------------------------------------------
         // ...
-        private PropertyHandler satelliteConfig = null;
-        private PropertyHandler classConfig = null;
-        private PropertyHandler serverConfig = null;
-
         try{
           satelliteConfig = new PropertyHandler(satellitePropertiesFile);
           classConfig = new PropertyHandler(classLoaderPropertiesFile);
           serverConfig = new PropertyHandler(serverPropertiesFile);
         } catch (Exception e){
             e.printStackTrace();
-            System.exit();
+            System.exit(1);
         }
-
-
 
 
         // create a socket info object that will be sent to the server
@@ -61,32 +60,9 @@ public class Satellite extends Thread {
 
         // get connectivity information of the server
         // ...
-        String serverHost = serverConfig.getProperty("HOST");
-        String ServerPortString = serverConfig.getProperty("PORT");
+        serverHost = serverConfig.getProperty("HOST");
+        serverPort = Integer.parseInt(serverConfig.getProperty("PORT"));
 
-
-
-        // create class loader
-        // -------------------
-        // ...
-        private void initOperationsLoader() {
-            String host = null;
-            String portString = null;
-            if ((host != null) && (portString != null)) {
-                try {
-                    classLoader = new HTTPClassLoader(host, Integer.parseInt(portString));
-                } catch (NumberFormatException nfe) {
-                    System.err.println("Wrong Portnumber, using Defaults");
-                }
-            } else {
-                System.err.println("configuration data incomplete, using Defaults");
-            }
-
-            if (classLoader == null) {
-                System.err.println("Could not create HTTPClassLoader, exiting ...");
-                System.exit(1);
-            }
-        }
 
         // read class loader config
         // ... Read above
@@ -98,7 +74,7 @@ public class Satellite extends Thread {
         String classHost = classConfig.getProperty("HOST");
         String classPortString = classConfig.getProperty("PORT");
 
-        initOperationsLoader(host, portString);
+        initToolLoader(classHost, classPortString);
 
 
         // create tools cache
@@ -119,19 +95,20 @@ public class Satellite extends Thread {
         // ---------------------------------------------------------------
         // ...
         try{
-          serverSocket = new ServerSocket(port);
+          ServerSocket serverSocket;
+            serverSocket = new ServerSocket(serverPort);
 
           while(true){
-            System.out.println("Waiting for connections on Port #" + port);
-            socket  = serverSocket.accept();
+            System.out.println("Waiting for connections on Port #" + serverPort);
+            Socket connectionToServer;
+            connectionToServer  = serverSocket.accept();
             System.out.println("A connection to a client is established!");
             //add Try-catch
-            (new SatelliteThread(socket, this)).start();
+            (new SatelliteThread(connectionToServer, this)).start();
           }
 
-        }catch(IOException ioe){
-          system.err.println("IOException" + ioe,getMessage());
-          ioe.printStackTrace();
+        } catch (IOException e) {
+            System.err.println(e);
         }
 
 
@@ -146,13 +123,13 @@ public class Satellite extends Thread {
     private class SatelliteThread extends Thread {
 
         Satellite satellite = null;
-        Socket jobRequest = null;
+        Socket jobRequestSocket = null;
         ObjectInputStream readFromServer = null;
         ObjectOutputStream writeToServer = null;
         Message message = null;
 
         SatelliteThread(Socket jobRequest, Satellite satellite) {
-            this.jobRequest = jobRequest;
+            this.jobRequestSocket = jobRequest;
             this.satellite = satellite;
         }
 
@@ -160,29 +137,50 @@ public class Satellite extends Thread {
         public void run() {
             // setting up object streams
             // ...
-            readFromServer = new ObjectInputStream(jobrequest);
-            writeToServer = new ObjectOutputStream(jobrequest);
+            try {
+                readFromServer = new ObjectInputStream(jobRequestSocket.getInputStream());
+                writeToServer = new ObjectOutputStream(jobRequestSocket.getOutputStream());
+            } catch (IOException ex) {
+                Logger.getLogger(Satellite.class.getName()).log(Level.SEVERE, null, ex);
+            }
 
             // reading message
             // ...
-            message = (Message) readFromServer.readObject();
-
-
+            try {
+                message = (Message) readFromServer.readObject();
+            } catch (IOException | ClassNotFoundException ex) {
+                Logger.getLogger(Satellite.class.getName()).log(Level.SEVERE, null, ex);
+            }
 
 
             // processing message
             switch (message.getType()) {
                 case JOB_REQUEST:
+                    //Cast message to Job object
                     Job job = (Job) message.getContent();
-                    //job.getToolName
-                    //Make Object that dictates parameters and class name inside content object
-                    //HELP
-                    //get string toolName
-                    //get parameters
-                    Tool tool = getToolObject(toolName);
-                    Object result = tool.go(toolParameters);
-                    //call toolName with parameters
-                    //send results back (writeToServer) result.writeToServer
+
+                    //Get tool name from message.
+                    String toolName = job.getToolName();
+
+
+                    Tool tool = null;
+                    try {
+                        tool = getToolObject(toolName);
+                    } catch (UnknownToolException | ClassNotFoundException | InstantiationException | IllegalAccessException | UnknownOperationException ex) {
+                        Logger.getLogger(Satellite.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+
+                    //Call the tool with the job paramters
+                    //Get results back as an object.
+                    Object resultObject = tool.go(job.getParameters());
+
+                    //send results back to server
+                    try {
+                        writeToServer.writeObject(resultObject);
+                    } catch (IOException ex) {
+                        Logger.getLogger(Satellite.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+
 
                     break;
 
@@ -195,14 +193,19 @@ public class Satellite extends Thread {
     /**
      * Aux method to get a tool object, given the fully qualified class string
      *
+     * @param toolClassString
+     * @return
+     * @throws appserver.job.UnknownToolException
+     * @throws java.lang.ClassNotFoundException
+     * @throws java.lang.InstantiationException
+     * @throws java.lang.IllegalAccessException
      */
-    public Tool getToolObject(String toolClassString) throws UnknownToolException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public Tool getToolObject(String toolClassString) throws UnknownToolException, ClassNotFoundException, InstantiationException, IllegalAccessException, UnknownOperationException {
 
         Tool toolObject = null;
 
         // ...
         if ((toolObject = (Tool) toolsCache.get(toolClassString)) == null) {
-            //String operationClassString = configuration.getProperty(operationString);
             System.out.println("\nTool's Class: " + toolClassString);
             if (toolClassString == null) {
                 throw new UnknownOperationException();
@@ -217,6 +220,27 @@ public class Satellite extends Thread {
 
         return toolObject;
     }
+
+    // create class loader
+        // -------------------
+        // ...
+        private void initToolLoader(String host, String portString) {
+
+            if ((host != null) && (portString != null)) {
+                try {
+                    classLoader = new HTTPClassLoader(host, Integer.parseInt(portString));
+                } catch (NumberFormatException nfe) {
+                    System.err.println("Wrong Portnumber, using Defaults");
+                }
+            } else {
+                System.err.println("configuration data incomplete, using Defaults");
+            }
+
+            if (classLoader == null) {
+                System.err.println("Could not create HTTPClassLoader, exiting ...");
+                System.exit(1);
+            }
+        }
 
     public static void main(String[] args) {
         // start a satellite
