@@ -41,6 +41,10 @@ public class Satellite extends Thread {
 
     public Satellite(String satellitePropertiesFile, String classLoaderPropertiesFile, String serverPropertiesFile) {
 
+
+        //Initialize Hashtable
+        toolsCache = new Hashtable();
+
         // read the configuration information from the file name passed in
         // ---------------------------------------------------------------
         // ...
@@ -137,6 +141,8 @@ public class Satellite extends Thread {
         public void run() {
             // setting up object streams
             // ...
+            System.out.println("In Thread.");
+
             try {
                 readFromServer = new ObjectInputStream(jobRequestSocket.getInputStream());
                 writeToServer = new ObjectOutputStream(jobRequestSocket.getOutputStream());
@@ -161,14 +167,19 @@ public class Satellite extends Thread {
 
                     //Get tool name from message.
                     String toolName = job.getToolName();
+                    System.out.println("Retrieveing tool: "+toolName);
 
 
                     Tool tool = null;
-                    try {
-                        tool = getToolObject(toolName);
-                    } catch (UnknownToolException | ClassNotFoundException | InstantiationException | IllegalAccessException | UnknownOperationException ex) {
-                        Logger.getLogger(Satellite.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+
+            {
+                try {
+                    tool = getToolObject(toolName);
+                } catch (Exception e) {
+                    Logger.getLogger(Satellite.class.getName()).log(Level.SEVERE, null, e);
+                }
+            }
+
 
                     //Call the tool with the job paramters
                     //Get results back as an object.
@@ -190,33 +201,30 @@ public class Satellite extends Thread {
         }
     }
 
-    /**
+    /*
      * Aux method to get a tool object, given the fully qualified class string
      *
-     * @param toolClassString
-     * @return
-     * @throws appserver.job.UnknownToolException
-     * @throws java.lang.ClassNotFoundException
-     * @throws java.lang.InstantiationException
-     * @throws java.lang.IllegalAccessException
      */
-    public Tool getToolObject(String toolClassString) throws UnknownToolException, ClassNotFoundException, InstantiationException, IllegalAccessException, UnknownOperationException {
+    public Tool getToolObject(String toolName) throws IOException, UnknownOperationException, ClassNotFoundException, InstantiationException, IllegalAccessException {
 
-        Tool toolObject = null;
+        Tool toolObject;
+        System.out.println(toolName);
 
-        // ...
-        if ((toolObject = (Tool) toolsCache.get(toolClassString)) == null) {
-            System.out.println("\nTool's Class: " + toolClassString);
-            if (toolClassString == null) {
+        //Check if tool is not already in cache
+        if ((toolObject = (Tool) toolsCache.get(toolName)) == null) {
+            System.out.println("Tool is not already in cache.");
+            System.out.println("\nTool's Class: " + toolName);
+            if (toolName == null) {
                 throw new UnknownOperationException();
             }
 
-            Class toolClass = classLoader.loadClass(toolClassString);
+            Class toolClass = classLoader.loadClass(toolName);
             toolObject = (Tool) toolClass.newInstance();
-            toolsCache.put(toolClassString, toolObject);
+            toolsCache.put(toolName, toolObject);
         } else {
-            System.out.println("Tool: \"" + toolClassString + "\" already in Cache");
+            System.out.println("Tool: \"" + toolName + "\" already in Cache");
         }
+
 
         return toolObject;
     }
@@ -244,7 +252,8 @@ public class Satellite extends Thread {
 
     public static void main(String[] args) {
         // start a satellite
-        Satellite satellite = new Satellite(args[0], args[1], args[2]);
+        //Satellite satellite = new Satellite(args[0], args[1], args[2]);
+        Satellite satellite = new Satellite("../../config/Satellite.Earth.properties", "../../config/WebServer.properties", "../../config/Server.properties");
         satellite.run();
 
         //(new Satellite("Satellite.Earth.properties", "WebServer.properties", "Server.properties")).start();
