@@ -23,4 +23,8 @@ class UnknownOperationException extends Exception{
 	public String toString(){
 		return errorMessage;
 	}
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 7dee85ae5764b8203f9d167ca96c491b7ccc56e4
