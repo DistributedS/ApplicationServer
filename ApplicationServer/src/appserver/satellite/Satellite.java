@@ -40,19 +40,11 @@ public class Satellite extends Thread {
     final private int serverPort;
 
     public Satellite(String satellitePropertiesFile, String classLoaderPropertiesFile, String serverPropertiesFile) {
-<<<<<<< HEAD
         
         
         //Initialize Hashtable
         toolsCache = new Hashtable();
         
-=======
-
-
-        //Initialize Hashtable
-        toolsCache = new Hashtable();
-
->>>>>>> 7dee85ae5764b8203f9d167ca96c491b7ccc56e4
         // read the configuration information from the file name passed in
         // ---------------------------------------------------------------
         // ...
@@ -66,11 +58,7 @@ public class Satellite extends Thread {
         }
 
 
-<<<<<<< HEAD
         // TODO: create a socket info object that will be sent to the server
-=======
-        // create a socket info object that will be sent to the server
->>>>>>> 7dee85ae5764b8203f9d167ca96c491b7ccc56e4
         // ...
 
 
@@ -86,11 +74,7 @@ public class Satellite extends Thread {
 
 
         // get class loader connectivity properties and create class loader
-<<<<<<< HEAD
         // ...
-=======
-        // ... Pending, need eample properties file
->>>>>>> 7dee85ae5764b8203f9d167ca96c491b7ccc56e4
         String classHost = classConfig.getProperty("HOST");
         String classPortString = classConfig.getProperty("PORT");
 
@@ -106,11 +90,7 @@ public class Satellite extends Thread {
     @Override
     public void run() {
 
-<<<<<<< HEAD
         // TODO: register this satellite with the SatelliteManager on the server
-=======
-        // register this satellite with the SatelliteManager on the server
->>>>>>> 7dee85ae5764b8203f9d167ca96c491b7ccc56e4
         // ---------------------------------------------------------------
         // ...
 
@@ -125,16 +105,10 @@ public class Satellite extends Thread {
           while(true){
             System.out.println("Waiting for connections on Port #" + serverPort);
             Socket connectionToServer;
-<<<<<<< HEAD
             //Accept incomming connections.
             connectionToServer  = serverSocket.accept();
             System.out.println("A connection to a client is established!");
             //Spin off new thread.
-=======
-            connectionToServer  = serverSocket.accept();
-            System.out.println("A connection to a client is established!");
-            //add Try-catch
->>>>>>> 7dee85ae5764b8203f9d167ca96c491b7ccc56e4
             (new SatelliteThread(connectionToServer, this)).start();
           }
 
@@ -168,23 +142,14 @@ public class Satellite extends Thread {
         public void run() {
             // setting up object streams
             // ...
-<<<<<<< HEAD
             
-=======
-            System.out.println("In Thread.");
-
->>>>>>> 7dee85ae5764b8203f9d167ca96c491b7ccc56e4
             try {
                 readFromServer = new ObjectInputStream(jobRequestSocket.getInputStream());
                 writeToServer = new ObjectOutputStream(jobRequestSocket.getOutputStream());
             } catch (IOException ex) {
                 Logger.getLogger(Satellite.class.getName()).log(Level.SEVERE, null, ex);
             }
-<<<<<<< HEAD
             
-=======
-
->>>>>>> 7dee85ae5764b8203f9d167ca96c491b7ccc56e4
             // reading message
             // ...
             try {
@@ -199,11 +164,7 @@ public class Satellite extends Thread {
                 case JOB_REQUEST:
                     //Cast message to Job object
                     Job job = (Job) message.getContent();
-<<<<<<< HEAD
                     
-=======
-
->>>>>>> 7dee85ae5764b8203f9d167ca96c491b7ccc56e4
                     //Get tool name from message.
                     String toolName = job.getToolName();
                     System.out.println("Retrieveing tool: "+toolName);
@@ -219,11 +180,7 @@ public class Satellite extends Thread {
                 }
             }
 
-<<<<<<< HEAD
                     
-=======
-
->>>>>>> 7dee85ae5764b8203f9d167ca96c491b7ccc56e4
                     //Call the tool with the job paramters
                     //Get results back as an object.
                     Object resultObject = tool.go(job.getParameters());
@@ -254,11 +211,7 @@ public class Satellite extends Thread {
         System.out.println(toolName);
 
         //Check if tool is not already in cache
-<<<<<<< HEAD
         if ((toolObject = (Tool) toolsCache.get(toolName)) == null) {     
-=======
-        if ((toolObject = (Tool) toolsCache.get(toolName)) == null) {
->>>>>>> 7dee85ae5764b8203f9d167ca96c491b7ccc56e4
             System.out.println("Tool is not already in cache.");
             System.out.println("\nTool's Class: " + toolName);
             if (toolName == null) {
@@ -271,19 +224,11 @@ public class Satellite extends Thread {
         } else {
             System.out.println("Tool: \"" + toolName + "\" already in Cache");
         }
-<<<<<<< HEAD
         
         
         return toolObject;
     }
     
-=======
-
-
-        return toolObject;
-    }
-
->>>>>>> 7dee85ae5764b8203f9d167ca96c491b7ccc56e4
     // create class loader
         // -------------------
         // ...
@@ -307,13 +252,8 @@ public class Satellite extends Thread {
 
     public static void main(String[] args) {
         // start a satellite
-<<<<<<< HEAD
         Satellite satellite = new Satellite(args[0], args[1], args[2]);
         //Satellite satellite = new Satellite("../../config/Satellite.Earth.properties", "../../config/WebServer.properties", "../../config/Server.properties");
-=======
-        //Satellite satellite = new Satellite(args[0], args[1], args[2]);
-        Satellite satellite = new Satellite("../../config/Satellite.Earth.properties", "../../config/WebServer.properties", "../../config/Server.properties");
->>>>>>> 7dee85ae5764b8203f9d167ca96c491b7ccc56e4
         satellite.run();
 
         //(new Satellite("Satellite.Earth.properties", "WebServer.properties", "Server.properties")).start();
