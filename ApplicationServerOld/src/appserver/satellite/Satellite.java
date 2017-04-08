@@ -38,8 +38,6 @@ public class Satellite extends Thread {
     private PropertyHandler serverConfig = null;
     final private String serverHost;
     final private int serverPort;
-    //
-    final private int satellitePort;
 
     public Satellite(String satellitePropertiesFile, String classLoaderPropertiesFile, String serverPropertiesFile) {
         
@@ -62,13 +60,6 @@ public class Satellite extends Thread {
 
         // TODO: create a socket info object that will be sent to the server
         // ...
-        satelliteInfo = new ConnectivityInfo();
-        
-        satelliteInfo.setName(satelliteConfig.getProperty("NAME"));
-        
-        satellitePort = Integer.parseInt(satelliteConfig.getProperty("PORT"));
-        satelliteInfo.setPort(satellitePort);
-        
 
 
         // get connectivity information of the server
@@ -102,25 +93,6 @@ public class Satellite extends Thread {
         // TODO: register this satellite with the SatelliteManager on the server
         // ---------------------------------------------------------------
         // ...
-        Socket appServerSocket = null;
-        ObjectOutputStream writeToServer = null;
-        Message satelliteRegister = null;
-        try {
-            appServerSocket = new Socket(serverHost, serverPort);
-            
-            writeToServer = new ObjectOutputStream(appServerSocket.getOutputStream());
-            
-            satelliteRegister = new Message(3, satelliteInfo);
-            
-            writeToServer.writeObject(satelliteRegister);
-            
-            appServerSocket.close();
-        } catch (IOException ex) {
-            Logger.getLogger(Satellite.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        
-        
 
 
         // create server socket
@@ -128,10 +100,10 @@ public class Satellite extends Thread {
         // ...
         try{
           ServerSocket serverSocket;
-            serverSocket = new ServerSocket(satellitePort);
+            serverSocket = new ServerSocket(serverPort);
 
           while(true){
-            System.out.println("Waiting for connections on Port #" + satellitePort);
+            System.out.println("Waiting for connections on Port #" + serverPort);
             Socket connectionToServer;
             //Accept incomming connections.
             connectionToServer  = serverSocket.accept();
@@ -280,8 +252,8 @@ public class Satellite extends Thread {
 
     public static void main(String[] args) {
         // start a satellite
-        //Satellite satellite = new Satellite(args[0], args[1], args[2]);
-        Satellite satellite = new Satellite("../../config/Satellite.Earth.properties", "../../config/WebServer.properties", "../../config/Server.properties");
+        Satellite satellite = new Satellite(args[0], args[1], args[2]);
+        //Satellite satellite = new Satellite("../../config/Satellite.Earth.properties", "../../config/WebServer.properties", "../../config/Server.properties");
         satellite.run();
 
         //(new Satellite("Satellite.Earth.properties", "WebServer.properties", "Server.properties")).start();
