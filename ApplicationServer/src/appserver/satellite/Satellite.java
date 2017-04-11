@@ -65,9 +65,11 @@ public class Satellite extends Thread {
         satelliteInfo = new ConnectivityInfo();
         
         satelliteInfo.setName(satelliteConfig.getProperty("NAME"));
+        System.out.println("Set name: "+satelliteConfig.getProperty("NAME"));
         
         satellitePort = Integer.parseInt(satelliteConfig.getProperty("PORT"));
         satelliteInfo.setPort(satellitePort);
+        System.out.println("Set Port: "+satellitePort);
         
 
 
@@ -114,7 +116,6 @@ public class Satellite extends Thread {
             
             writeToServer.writeObject(satelliteRegister);
             
-            appServerSocket.close();
         } catch (IOException ex) {
             Logger.getLogger(Satellite.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -284,6 +285,7 @@ public class Satellite extends Thread {
         // start a satellite
         Satellite satellite = new Satellite(args[0], args[1], args[2]);
         //Satellite satellite = new Satellite("../../config/Satellite.Earth.properties", "../../config/WebServer.properties", "../../config/Server.properties");
+        //Satellite satellite = new Satellite("../../config/Satellite.Mercury.properties", "../../config/WebServer.properties", "../../config/Server.properties");
         satellite.run();
 
         //(new Satellite("Satellite.Earth.properties", "WebServer.properties", "Server.properties")).start();

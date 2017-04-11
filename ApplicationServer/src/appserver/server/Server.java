@@ -81,8 +81,9 @@ public class Server {
     private class ServerThread extends Thread {
 
         Socket client = null;
-        ObjectInputStream readFromNet = null;
         ObjectOutputStream writeToNet = null;
+        ObjectInputStream readFromNet = null;
+        
         Message message = null;
 
         private ServerThread(Socket client) {
@@ -94,8 +95,9 @@ public class Server {
             try {
                 // setting up object streams
                 // ...
-                readFromNet = new ObjectInputStream(client.getInputStream());
                 writeToNet = new ObjectOutputStream(client.getOutputStream());
+                readFromNet = new ObjectInputStream(client.getInputStream());
+                
             } catch (IOException ex) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             }
