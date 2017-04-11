@@ -125,7 +125,7 @@ public class Server {
                     // register satellite
                     synchronized (Server.satelliteManager) {
                         // ...
-                        System.out.println(satelliteInfo.getName());
+                        //System.out.println(satelliteInfo.getName());
                         Server.satelliteManager.registerSatellite(satelliteInfo);
                     }
 
@@ -157,34 +157,40 @@ public class Server {
 
                     Socket satellite = null;
                     
-                    
-                    ObjectInputStream readFromSatellite = null;
                     ObjectOutputStream writeToSatellite = null;
+                    ObjectInputStream readFromSatellite = null;
+                    
                     try {
                         // connect to satellite
                         // ...
                         System.out.println("Connecting to satellite on port: "+satelliteInfo.getPort());
                         satellite = new Socket("127.0.0.1", satelliteInfo.getPort());
-                        System.out.println("Connected to satellite.");
+                        //System.out.println("Connected to satellite.");
                         
                         // open object streams,
-                        readFromSatellite = new ObjectInputStream(satellite.getInputStream());
+                        
                         writeToSatellite = new ObjectOutputStream(satellite.getOutputStream());
                         
-                        System.out.println("Setup object streams.");
+                        //System.out.println("Setup object output stream.");
+                        
+                        readFromSatellite = new ObjectInputStream(satellite.getInputStream());
+                        
+                        //System.out.println("Setup object input stream.");
+                        
+                        
                         
                     } catch (IOException ex) {
                         Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
                     }
-
-                    
+               
                     
                     try {
                         // forward message (as is) to satellite,
+                        //System.out.println("Forwarding message to satillite.");
                         writeToSatellite.writeObject(message);
                         
                         // receive result from satellite and
-                        Message messageReply = (Message) readFromSatellite.readObject();
+                        Object messageReply = readFromSatellite.readObject();
                         
                         // write result back to client
                         // ...

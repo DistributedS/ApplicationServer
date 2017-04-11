@@ -157,8 +157,8 @@ public class Satellite extends Thread {
 
         Satellite satellite = null;
         Socket jobRequestSocket = null;
-        ObjectInputStream readFromServer = null;
         ObjectOutputStream writeToServer = null;
+        ObjectInputStream readFromServer = null;   
         Message message = null;
 
         SatelliteThread(Socket jobRequest, Satellite satellite) {
@@ -170,16 +170,18 @@ public class Satellite extends Thread {
         public void run() {
             // setting up object streams
             // ...
-            
+            //System.out.println("Setting up object streams on Satellite.");
             try {
-                readFromServer = new ObjectInputStream(jobRequestSocket.getInputStream());
                 writeToServer = new ObjectOutputStream(jobRequestSocket.getOutputStream());
+                readFromServer = new ObjectInputStream(jobRequestSocket.getInputStream());
+                
             } catch (IOException ex) {
                 Logger.getLogger(Satellite.class.getName()).log(Level.SEVERE, null, ex);
             }
             
             // reading message
             // ...
+            //System.out.println("Read message from client.");
             try {
                 message = (Message) readFromServer.readObject();
             } catch (IOException | ClassNotFoundException ex) {
@@ -280,8 +282,8 @@ public class Satellite extends Thread {
 
     public static void main(String[] args) {
         // start a satellite
-        //Satellite satellite = new Satellite(args[0], args[1], args[2]);
-        Satellite satellite = new Satellite("../../config/Satellite.Earth.properties", "../../config/WebServer.properties", "../../config/Server.properties");
+        Satellite satellite = new Satellite(args[0], args[1], args[2]);
+        //Satellite satellite = new Satellite("../../config/Satellite.Earth.properties", "../../config/WebServer.properties", "../../config/Server.properties");
         satellite.run();
 
         //(new Satellite("Satellite.Earth.properties", "WebServer.properties", "Server.properties")).start();
