@@ -7,12 +7,21 @@ import appserver.job.Tool;
  * @author peter
  */
 public class Fibonacci implements Tool {
-    FibonacciAux fibonacciHelper = null;
     
     @Override
     public Object go(Object parameters) {
         
-        fibonacciHelper = new FibonacciAux ((Integer) parameters);
-        return fibonacciHelper.getResult();
+        return fib(((Integer) parameters));
+        
+        
+    }
+    
+    private static int fib(int n) {
+        if (n == 1)
+            return 0;
+        if (n == 2)
+            return 1;
+ 
+        return fib(n - 1) + fib(n - 2);
     }
 }
